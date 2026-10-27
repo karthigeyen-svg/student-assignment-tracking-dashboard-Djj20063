@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Student Assignment Tracking — Djj20063</title>
+<style>
+  :root {
+    --bg: #f4f6f9;
+    --surface: #ffffff;
+    --border: #e2e6ea;
+    --text: #1a1d23;
+    --muted: #6b7280;
+    --accent: #2563eb;
+    --success: #16a34a;
+    --warning: #d97706;
+    --danger: #dc2626;
+    --info: #0891b2;
+    --purple: #7c3aed;
+    --teal: #0d9488;
+    --radius: 10px;
+    --shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    font-size: 14px;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: var(--accent);
+    color: #fff;
+    padding: 20px 28px 16px;
+  }
+  .header-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+  .header h1 { font-size: 20px; font-weight: 700; letter-spacing: .3px; }
+  .header-meta { font-size: 12px; opacity: .85; margin-top: 4px; }
+  .header-badge {
+    background: rgba(255,255,255,.2);
+    border: 1px solid rgba(255,255,255,.35);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /* ── Main wrapper ── */
+  .main { max-width: 1300px; margin: 0 auto; padding: 22px 20px 40px; }
+
+  /* ── Section title ── */
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    margin-top: 28px;
+  }
+
+  /* ── KPI cards grid ── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+  }
+  .kpi-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px 18px;
+    border-top: 3px solid var(--accent);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .kpi-card.green  { border-top-color: var(--success); }
+  .kpi-card.amber  { border-top-color: var(--warning); }
+  .kpi-card.red    { border-top-color: var(--danger); }
+  .kpi-card.info   { border-top-color: var(--info); }
+  .kpi-card.purple { border-top-color: var(--purple); }
+  .kpi-card.teal   { border-top-color: var(--teal); }
+  .kpi-label { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+  .kpi-value { font-size: 28px; font-weight: 800; color: var(--text); }
+  .kpi-sub   { font-size: 11px; color: var(--muted); }
+
+  /* ── Progress bar ── */
+  .progress-wrap { margin-top: 4px; }
+  .progress-bar-bg {
+    background: #e5e7eb;
+    border-radius: 99px;
+    height: 7px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width .6s ease;
+  }
+  .fill-green  { background: var(--success); }
+  .fill-amber  { background: var(--warning); }
+  .fill-blue   { background: var(--accent); }
+  .fill-info   { background: var(--info); }
+  .fill-purple { background: var(--purple); }
+  .fill-teal   { background: var(--teal); }
+
+  /* ── Assignment submission bars ── */
+  .assign-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 14px;
+  }
+  .assign-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px 18px;
+  }
+  .assign-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .assign-pct {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .assign-counts {
+    display: flex;
+    gap: 16px;
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .assign-counts span strong { color: var(--text); font-weight: 700; }
+
+  /* ── Overall donut-style ring (CSS only) ── */
+  .ring-section {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px 22px;
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+  .ring-wrap {
+    position: relative;
+    width: 110px;
+    height: 110px;
+    flex-shrink: 0;
+  }
+  .ring-wrap svg { transform: rotate(-90deg); }
+  .ring-center {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+  .ring-center-val { font-size: 22px; font-weight: 800; color: var(--accent); }
+  .ring-center-lbl { font-size: 10px; color: var(--muted); font-weight: 600; }
+  .ring-legend { flex: 1; min-width: 180px; }
+  .ring-legend h3 { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .legend-item .legend-count { margin-left: auto; font-weight: 700; font-size: 13px; }
+
+  /* ── Table ── */
+  .table-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .table-toolbar {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .table-toolbar h3 { font-size: 14px; font-weight: 700; }
+  .table-toolbar-meta { font-size: 11px; color: var(--muted); }
+  .table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    min-width: 900px;
+  }
+  thead th {
+    background: #f8f9fb;
+    padding: 9px 10px;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  thead th:first-child, thead th:nth-child(2) { text-align: left; }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #f8f9fb; }
+  tbody td {
+    padding: 8px 10px;
+    text-align: center;
+    vertical-align: middle;
+  }
+  tbody td:first-child { text-align: left; font-weight: 600; width: 40px; color: var(--muted); }
+  tbody td:nth-child(2) { text-align: left; white-space: nowrap; }
+
+  /* status chips */
+  .chip {
+    display: inline-block;
+    border-radius: 99px;
+    padding: 2px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .chip-s  { background: #dcfce7; color: #15803d; }   /* submitted */
+  .chip-p  { background: #fef9c3; color: #92400e; }   /* pending */
+  .chip-m  { background: #fee2e2; color: #991b1b; }   /* missing */
+  .chip-l  { background: #e0f2fe; color: #0369a1; }   /* late */
+
+  /* overall % pill */
+  .pct-pill {
+    display: inline-block;
+    border-radius: 99px;
+    padding: 2px 9px;
+    font-size: 11px;
+    font-weight: 800;
+  }
+  .pct-high { background: #dcfce7; color: #15803d; }
+  .pct-mid  { background: #fef9c3; color: #92400e; }
+  .pct-low  { background: #fee2e2; color: #991b1b; }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    padding: 14px 0 8px;
+    margin-top: 36px;
+  }
+
+  @media (max-width: 640px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .ring-section { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ HEADER ═══════════ -->
+<div class="header">
+  <div class="header-top">
+    <div>
+      <h1>📋 Student Assignment Tracking Dashboard</h1>
+      <div class="header-meta">Class: Djj20063 &nbsp;|&nbsp; Programme: Electrical &amp; Electronic Engineering &nbsp;|&nbsp; Session: 2024/2025 &nbsp;|&nbsp; Lecturer: Encik Razif</div>
+    </div>
+    <div class="header-badge">30 Students Enrolled</div>
+  </div>
+</div>
+
+<!-- ═══════════ MAIN ═══════════ -->
+<div class="main">
+
+  <!-- KPI row -->
+  <div class="section-title">Overview</div>
+  <div class="kpi-grid" id="kpiGrid"></div>
+
+  <!-- Overall submission status -->
+  <div class="section-title">Overall Submission Status</div>
+  <div class="ring-section" id="overallRing"></div>
+
+  <!-- Per-assignment bars -->
+  <div class="section-title">Submission Rate by Assignment</div>
+  <div class="assign-grid" id="assignGrid"></div>
+
+  <!-- Student detail table -->
+  <div class="section-title">Student Submission Detail</div>
+  <div class="table-card">
+    <div class="table-toolbar">
+      <h3>Individual Submission Record</h3>
+      <span class="table-toolbar-meta">Class Djj20063 · 30 students · 8 assignments</span>
+    </div>
+    <div class="table-wrap">
+      <table id="studentTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Student Name</th>
+            <th>Quiz</th>
+            <th>Test 1</th>
+            <th>Test 2</th>
+            <th>Practical 1</th>
+            <th>Practical 2</th>
+            <th>Practical 3</th>
+            <th>Affective</th>
+            <th>Sub. Assignment</th>
+            <th>Submitted</th>
+            <th>Rate</th>
+          </tr>
+        </thead>
+        <tbody id="studentTbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">Made with IBM Bob</div>
+
+<script>
+// ══════════════════════════════════
+// DATA
+// ══════════════════════════════════
+const ASSIGNMENTS = [
+  { key: 'quiz',       label: 'Quiz' },
+  { key: 'test1',      label: 'Test 1' },
+  { key: 'test2',      label: 'Test 2' },
+  { key: 'prac1',      label: 'Practical Task 1' },
+  { key: 'prac2',      label: 'Practical Task 2' },
+  { key: 'prac3',      label: 'Practical Task 3' },
+  { key: 'affective',  label: 'Practical Affective' },
+  { key: 'subAssign',  label: 'Submission Assignment' },
+];
+
+// S=submitted, P=pending, M=missing, L=late
+const STUDENTS = [
+  { name: 'Ahmad Syafiq Bin Zainal',     quiz:'S', test1:'S', test2:'S', prac1:'S', prac2:'S', prac3:'S', affective:'S', subAssign:'S' },
+  { name: 'Amirul Haziq Bin Rosli',      quiz:'S', test1:'S', test2:'P', prac1:'S', prac2:'S', prac3:'L', affective:'S', subAssign:'S' },
+  { name: 'Azri Fitri Bin Hamid',        quiz:'S', test1:'S', test2:'S', prac1:'S', prac2:'P', prac3:'S', affective:'P', subAssign:'S' },
+  { name: 'Danial Izzat Bin Othman',     quiz:'S', test1:'M', test2:'S', prac1:'S', prac2:'S', prac3:'S', affective:'S', subAssign:'S' },
+  { name: 'Faris Hazwan Bin Idris',      quiz:'L', test1:'S', test2:'S', prac1:'P', prac2:'S', prac3:'S', affective:'S', subAssign:'L' },
+  { name: 'Hafizuddin Bin Saad',         quiz:'S', test1:'S', test2:'S', prac1:'S', prac2:'S', prac3:'S', affective:'S', subAssign:'S' },
+  { name: 'Hazwan Irfan Bin Kassim',     quiz:'S', test1:'P', test2:'P', prac1:'S', prac2:'S', prac3:'P', affective:'S', subAssign:'P' },
+  { name: 'Izzatul Iman Binti Ramli',    quiz:'S', test1:'S', test2:'S', prac1:'S', prac2:'S', prac3:'S', affective:'S', subAssign:'S' },
+  { name: 'Khairul Anwar Bin Yusof',     quiz:'M', test1:'M', test2:'S', prac1:'S', prac2:'M', prac3:'S', affective:'S', subAssign:'M' },
+  { name: 'Luqmanul Hakim Bin Salleh',   quiz:'S', test1:'S', test2:'S', prac1:'L', prac2:'S', prac3:'S', affective:'S', subAssign:'S' },
+  { name: 'Mahathir Bin Musa',           quiz:'S', test1:'S', test2:'S', prac1:'S', prac2:'S', prac3:'S', affective:'S', subAssign:'S' },
+  { name: 'Mohd Aiman Bin Zulkifli',     quiz:'S', test1:'S', test2:'L', prac1:'S', prac2:'S', prac3:'S', affective:'P', subAssign:'S' },
+  { name: 'Mohd Afiq Bin Razali',        quiz:'P', test1:'S', test2:'S', prac1:'S', prac2:'P', prac3:'S', affective:'S', subAssign:'S' },
+  { name: 'Mohd Fadhli Bin Nordin',      quiz:'S', test1:'S', test2:'S', prac1:'S', prac2:'S', prac3:'S', affective:'S', subAssign:'S' },
+  { name: 'Mohd Hafiz Bin Baharum',      quiz:'S', test1:'S', test2:'S', prac1:'M', prac2:'S', prac3:'M', affective:'S', subAssign:'P' },
+  { name: 'Mohd Nizam Bin Jaffar',       quiz:'S', test1:'L', test2:'S', prac1:'S', prac2:'S', prac3:'S', affective:'S', subAssign:'S' },
+  { name: 'Muhd Azizuddin Bin Ismail',   quiz:'S', test1:'S', test2:'S', prac1:'S', prac2:'S', prac3:'S', affective:'S', subAssign:'S' },
+  { name: 'Muhd Firdaus Bin Rashid',     quiz:'S', test1:'S', test2:'P', prac1:'P', prac2:'S', prac3:'S', affective:'S', subAssign:'S' },
+  { name: 'Muhd Khairul Bin Abu',        quiz:'S', test1:'S', test2:'S', prac1:'S', prac2:'S', prac3:'S', affective:'S', subAssign:'S' },
+  { name: 'Muhd Ridhwan Bin Jaafar',     quiz:'M', test1:'S', test2:'M', prac1:'S', prac2:'S', prac3:'P', affective:'M', subAssign:'M' },
+  { name: 'Naim Haziq Bin Sulaiman',     quiz:'S', test1:'S', test2:'S', prac1:'S', prac2:'S', prac3:'S', affective:'S', subAssign:'S' },
+  { name: 'Noor Azlan Bin Ghazali',      quiz:'S', test1:'S', test2:'S', prac1:'S', prac2:'L', prac3:'S', affective:'S', subAssign:'S' },
+  { name: 'Nor Hafezan Bin Mamat',       quiz:'S', test1:'S', test2:'S', prac1:'S', prac2:'S', prac3:'S', affective:'S', subAssign:'S' },
+  { name: 'Nur Hanis Binti Hamdan',      quiz:'S', test1:'S', test2:'S', prac1:'S', prac2:'S', prac3:'S', affective:'S', subAssign:'S' },
+  { name: 'Nurul Ain Binti Kamarudin',   quiz:'P', test1:'S', test2:'S', prac1:'S', prac2:'S', prac3:'S', affective:'S', subAssign:'P' },
+  { name: 'Raziff Bin Yahya',            quiz:'S', test1:'S', test2:'S', prac1:'S', prac2:'S', prac3:'S', affective:'S', subAssign:'S' },
+  { name: 'Shahril Bin Maarof',          quiz:'S', test1:'P', test2:'P', prac1:'S', prac2:'S', prac3:'S', affective:'P', subAssign:'S' },
+  { name: 'Syafiq Haiqal Bin Ramli',     quiz:'S', test1:'S', test2:'S', prac1:'S', prac2:'S', prac3:'S', affective:'S', subAssign:'S' },
+  { name: 'Wan Haziq Bin Wan Ahmad',     quiz:'S', test1:'S', test2:'M', prac1:'S', prac2:'S', prac3:'S', affective:'S', subAssign:'S' },
+  { name: 'Zulhilmi Bin Zainudin',       quiz:'S', test1:'S', test2:'S', prac1:'S', prac2:'S', prac3:'S', affective:'S', subAssign:'S' },
+];
+
+const TOTAL_STUDENTS = STUDENTS.length;
+const TOTAL_ASSIGN   = ASSIGNMENTS.length;
+
+// ══════════════════════════════════
+// HELPERS
+// ══════════════════════════════════
+function countStatus(key, status) {
+  return STUDENTS.filter(s => s[key] === status).length;
+}
+function studentSubmitted(s) {
+  return ASSIGNMENTS.filter(a => s[a.key] === 'S' || s[a.key] === 'L').length;
+}
+function pct(n, d) { return d === 0 ? 0 : Math.round(n / d * 100); }
+function chip(status) {
+  const map = { S:'chip-s', P:'chip-p', M:'chip-m', L:'chip-l' };
+  const lbl = { S:'Submitted', P:'Pending', M:'Missing', L:'Late' };
+  return `<span class="chip ${map[status]}">${lbl[status]}</span>`;
+}
+function pctPill(p) {
+  const cls = p >= 80 ? 'pct-high' : p >= 50 ? 'pct-mid' : 'pct-low';
+  return `<span class="pct-pill ${cls}">${p}%</span>`;
+}
+
+// ══════════════════════════════════
+// KPI CARDS
+// ══════════════════════════════════
+const totalSubmissions = STUDENTS.reduce((acc, s) => acc + studentSubmitted(s), 0);
+const maxSubmissions   = TOTAL_STUDENTS * TOTAL_ASSIGN;
+const overallRate      = pct(totalSubmissions, maxSubmissions);
+
+const allStatuses = ASSIGNMENTS.flatMap(a => STUDENTS.map(s => s[a.key]));
+const totalS   = allStatuses.filter(x => x === 'S').length;
+const totalL   = allStatuses.filter(x => x === 'L').length;
+const totalP   = allStatuses.filter(x => x === 'P').length;
+const totalM   = allStatuses.filter(x => x === 'M').length;
+
+const kpis = [
+  { label: 'Total Students',      value: TOTAL_STUDENTS, sub: 'Class Djj20063',           color: '',       pct: null },
+  { label: 'Total Submissions',   value: totalSubmissions, sub: `of ${maxSubmissions} possible`, color: 'green', pct: overallRate },
+  { label: 'Overall Rate',        value: overallRate + '%', sub: 'Submitted + Late',       color: 'green',  pct: null },
+  { label: 'Pending',             value: totalP,           sub: 'awaiting submission',     color: 'amber',  pct: pct(totalP, maxSubmissions) },
+  { label: 'Missing',             value: totalM,           sub: 'not submitted at all',    color: 'red',    pct: pct(totalM, maxSubmissions) },
+  { label: 'Late Submissions',    value: totalL,           sub: 'submitted after deadline', color: 'info',  pct: pct(totalL, maxSubmissions) },
+];
+
+const kpiGrid = document.getElementById('kpiGrid');
+kpis.forEach(k => {
+  const card = document.createElement('div');
+  card.className = `kpi-card ${k.color}`;
+  card.innerHTML = `
+    <div class="kpi-label">${k.label}</div>
+    <div class="kpi-value">${k.value}</div>
+    <div class="kpi-sub">${k.sub}</div>
+    ${k.pct !== null ? `
+    <div class="progress-wrap">
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill ${k.color === 'green' ? 'fill-green' : k.color === 'amber' ? 'fill-amber' : k.color === 'red' ? '' : 'fill-info'}"
+             style="width:${k.pct}%; background: ${k.color === 'red' ? 'var(--danger)' : ''}"></div>
+      </div>
+    </div>` : ''}
+  `;
+  kpiGrid.appendChild(card);
+});
+
+// ══════════════════════════════════
+// OVERALL RING (SVG donut)
+// ══════════════════════════════════
+const ringData = [
+  { label: 'Submitted', count: totalS, color: 'var(--success)' },
+  { label: 'Late',      count: totalL, color: 'var(--info)' },
+  { label: 'Pending',   count: totalP, color: 'var(--warning)' },
+  { label: 'Missing',   count: totalM, color: 'var(--danger)' },
+];
+const R = 45, CX = 55, CY = 55, STROKE = 14;
+const circumference = 2 * Math.PI * R;
+let offset = 0;
+const arcs = ringData.map(d => {
+  const frac  = d.count / maxSubmissions;
+  const dash  = frac * circumference;
+  const gap   = circumference - dash;
+  const arc   = { ...d, dash, gap, offset };
+  offset += dash;
+  return arc;
+});
+
+const svgArcs = arcs.map(a =>
+  `<circle cx="${CX}" cy="${CY}" r="${R}" fill="none"
+    stroke="${a.color}" stroke-width="${STROKE}"
+    stroke-dasharray="${a.dash.toFixed(2)} ${a.gap.toFixed(2)}"
+    stroke-dashoffset="${-a.offset.toFixed(2)}" />`
+).join('');
+
+const legendHTML = ringData.map(d =>
+  `<div class="legend-item">
+    <div class="legend-dot" style="background:${d.color}"></div>
+    <span>${d.label}</span>
+    <span class="legend-count">${d.count}</span>
+  </div>`
+).join('');
+
+document.getElementById('overallRing').innerHTML = `
+  <div class="ring-wrap">
+    <svg width="110" height="110" viewBox="0 0 110 110">
+      <circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="#e5e7eb" stroke-width="${STROKE}"/>
+      ${svgArcs}
+    </svg>
+    <div class="ring-center">
+      <div class="ring-center-val">${overallRate}%</div>
+      <div class="ring-center-lbl">Overall</div>
+    </div>
+  </div>
+  <div class="ring-legend">
+    <h3>Overall Submission Status</h3>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">
+      Total possible: ${maxSubmissions} &nbsp;·&nbsp; ${TOTAL_STUDENTS} students × ${TOTAL_ASSIGN} assignments
+    </div>
+    ${legendHTML}
+  </div>
+`;
+
+// ══════════════════════════════════
+// PER-ASSIGNMENT BARS
+// ══════════════════════════════════
+const ASSIGN_COLORS = ['fill-blue','fill-green','fill-teal','fill-purple','fill-info','fill-amber','fill-green','fill-blue'];
+const assignGrid = document.getElementById('assignGrid');
+
+ASSIGNMENTS.forEach((a, i) => {
+  const s   = countStatus(a.key, 'S');
+  const l   = countStatus(a.key, 'L');
+  const p   = countStatus(a.key, 'P');
+  const m   = countStatus(a.key, 'M');
+  const sub = s + l;
+  const rate = pct(sub, TOTAL_STUDENTS);
+
+  const card = document.createElement('div');
+  card.className = 'assign-card';
+  card.innerHTML = `
+    <div class="assign-title">
+      <span>${a.label}</span>
+      <span class="assign-pct">${rate}%</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill ${ASSIGN_COLORS[i]}" style="width:${rate}%"></div>
+    </div>
+    <div class="assign-counts">
+      <span><strong>${s}</strong> Submitted</span>
+      <span><strong>${l}</strong> Late</span>
+      <span><strong>${p}</strong> Pending</span>
+      <span><strong>${m}</strong> Missing</span>
+    </div>
+  `;
+  assignGrid.appendChild(card);
+});
+
+// ══════════════════════════════════
+// STUDENT TABLE
+// ══════════════════════════════════
+const tbody = document.getElementById('studentTbody');
+STUDENTS.forEach((s, idx) => {
+  const submitted = studentSubmitted(s);
+  const rate      = pct(submitted, TOTAL_ASSIGN);
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>${idx + 1}</td>
+    <td>${s.name}</td>
+    <td>${chip(s.quiz)}</td>
+    <td>${chip(s.test1)}</td>
+    <td>${chip(s.test2)}</td>
+    <td>${chip(s.prac1)}</td>
+    <td>${chip(s.prac2)}</td>
+    <td>${chip(s.prac3)}</td>
+    <td>${chip(s.affective)}</td>
+    <td>${chip(s.subAssign)}</td>
+    <td><strong>${submitted}/${TOTAL_ASSIGN}</strong></td>
+    <td>${pctPill(rate)}</td>
+  `;
+  tbody.appendChild(tr);
+});
+</script>
+</body>
+</html>
